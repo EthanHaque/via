@@ -118,6 +118,7 @@ _via_group_annotator.prototype.group_show = function(group_name, page_no) {
   this.current_page_vid_list = [];
   this.current_page_mid_list = [];
   this.page_metadata_container = [];
+  this.page_video_element_list = [];
   this.page_tseg = {};
   for (var vindex in this.g[group_name]) {
     if(parseInt(vindex) >= vindex_start &&
@@ -140,6 +141,33 @@ _via_group_annotator.prototype.group_show = function(group_name, page_no) {
   localStorage.setItem('page_no', this.current_page_no);
 }
 
+_via_group_annotator.prototype._group_metadata_annotated_count = function(group_name) {
+  var annotated_count = 0;
+  for(var mindex in this.g[group_name]) {
+    var mid = this.g[group_name][mindex]['mid'];
+    if( this.d.store.metadata[mid]['av'].hasOwnProperty('2') ) { // i.e. is_correct attribute is defined
+      annotated_count = annotated_count + 1;
+    }
+  }
+  return annotated_count;
+}
+
+_via_group_annotator.prototype._group_name_selector_update = function() {
+  this.group_name_selector.innerHTML = '';
+  for (var group_name_index in this.group_name_list) {
+    var oi = document.createElement('option');
+    oi.setAttribute('value', group_name_index);
+    var group_name = this.group_name_list[group_name_index];
+    var file_count = this.g[group_name].length;
+    var annotated_count = this._group_metadata_annotated_count(group_name);
+    oi.innerHTML = 'Sign: ' + group_name + ' [' + annotated_count + '/' + file_count + ']';
+    if(parseInt(group_name_index) === this.current_group_name_index) {
+      oi.setAttribute('selected', 'selected');
+    }
+    this.group_name_selector.appendChild(oi);
+  }
+}
+
 _via_group_annotator.prototype._group_view_init_toolbar = function(page_no, page_count) {
   var group_label = document.createElement('div');
   group_label.innerHTML = '';
@@ -152,7 +180,8 @@ _via_group_annotator.prototype._group_view_init_toolbar = function(page_no, page
     oi.setAttribute('value', group_name_index);
     var group_name = this.group_name_list[group_name_index];
     var file_count = this.g[group_name].length;
-    oi.innerHTML = 'Sign: ' + group_name + ' [' + file_count + ']';
+    var annotated_count = this._group_metadata_annotated_count(group_name);
+    oi.innerHTML = 'Sign: ' + group_name + ' [' + annotated_count + '/' + file_count + ']';
     if(parseInt(group_name_index) === this.current_group_name_index) {
       oi.setAttribute('selected', 'selected');
     }
@@ -327,62 +356,50 @@ _via_group_annotator.prototype._group_view_init_file_container = function(vindex
   info_container.appendChild(vid_container);
   var control_container = document.createElement('div');
   control_container.setAttribute('class', 'control');
-  this._init_playback_speed_buttons(fid, control_container);
+  this._init_playback_speed_buttons(fid, vid, mid, control_container );
   info_container.appendChild(control_container);
   file_container.appendChild(info_container);
 
-  var file_element = this._group_view_init_file_element(fid, vid);
+  var file_element = this._group_view_init_file_element(fid, vid, mid);
   file_element.setAttribute('data-fid', fid);
+  file_element.setAttribute('data-vid', vid);
+  file_element.setAttribute('data-mid', mid);
   file_container.appendChild(file_element);
   this.page_video_element_list.push(file_element);
 
   var metadata_container = document.createElement('div');
   metadata_container.setAttribute('data-vid', vid);
   metadata_container.setAttribute('data-fid', fid);
+  metadata_container.setAttribute('data-mid', mid);
   metadata_container.setAttribute('class', 'metadata_container');
-  this._group_view_init_file_metadata(metadata_container, vid, fid);
+  this._group_view_init_file_metadata(metadata_container, mid);
+
   file_container.appendChild(metadata_container);
   this.page_metadata_container.push(metadata_container);
   return file_container;
 }
 
-_via_group_annotator.prototype._group_view_init_file_metadata = function(container, vid, fid) {
-  var file_mid = '';
-  for ( var mindex in this.d.cache.mid_list[vid] ) {
-    var mid = this.d.cache.mid_list[vid][mindex];
-    if ( this.d.store.metadata[mid].z.length === 2 &&
-         this.d.store.metadata[mid].xy.length === 0
-       ) {
-      file_mid = mid;
-      break;
-    }
-  }
-
-  if ( file_mid === '' ) {
-    // create a new metadata
-    this.d.metadata_add(vid, [], [], {}).then( function(ok) {
-      this._fmetadata_init(ok.mid, container);
-    }.bind(this), function(err) {
-      console.log('failed to show file metadata!');
-      console.log(err);
-    }.bind(this));
-  } else {
-    this._fmetadata_init(file_mid, container);
-  }
-}
-
-_via_group_annotator.prototype._fmetadata_init = function(mid, container) {
+_via_group_annotator.prototype._group_view_init_file_metadata = function(container, mid) {
   container.innerHTML = '';
   var aid_list = this.d.cache.attribute_group['FILE1_Z0_XY0'];
   var aid;
+
   for (var aindex in aid_list) {
     aid = aid_list[aindex]
     if (aid !== this.group_by_aid) {
-      var el = this._metadata_attribute_io_html_element(aid, mid);
+      var el;
+      if(this.d.store.attribute[aid].aname === "subtitle") {
+        // show subtitles as a non-editable text (used for reference of annotator only)
+        // Updated on 29 April 2022 by Abhishek Dutta based on requirements from Liliane Momemni
+        el = document.createElement('div');
+        el.innerHTML = 'Subtitle: ' + this.d.store.metadata[mid].av[aid];
+      } else {
+        el = this._metadata_attribute_io_html_element(aid, mid);
+      }
       container.appendChild(el);
     }
 
-    if(aid === '2') {
+    if(this.d.store.attribute[aid].aname === "is_correct") {
       switch(this.d.store.metadata[mid].av[aid]) {
       case 'n': // No
         container.setAttribute('style', 'background-color:#ff2a2a;');
@@ -400,25 +417,15 @@ _via_group_annotator.prototype._fmetadata_init = function(mid, container) {
   }
 }
 
-_via_group_annotator.prototype._group_view_init_file_element = function(fid, vid) {
+_via_group_annotator.prototype._group_view_init_file_element = function(fid, vid, mid) {
   // the temporal segment defined in metadata constrains
   // the playback timeline for this video
   var file_src = this.d.file_get_src(fid);
   var group_by_aid_value = this.group_name_list[this.current_group_name_index];
-  for ( var mindex in this.d.cache.mid_list[vid] ) {
-    var mid = this.d.cache.mid_list[vid][mindex];
-    if ( this.d.store.metadata[mid].z.length !== 0 &&
-         this.d.store.metadata[mid].xy.length === 0
-       ) {
-      // check if group_by constraint matches
-      if(this.d.store.metadata[mid].av.hasOwnProperty(this.group_by_aid)) {
-        if(this.d.store.metadata[mid].av[this.group_by_aid] === this.group_name_list[this.current_group_name_index] ) {
-          file_src += '#t=' + this.d.store.metadata[mid].z[0].toFixed(3) + ',' + this.d.store.metadata[mid].z[1].toFixed(3);
-          this.page_tseg[fid] = this.d.store.metadata[mid].z;
-          break;
-        }
-      }
-    }
+  if(this.d.store.metadata[mid].av[this.group_by_aid] === this.group_name_list[this.current_group_name_index] ) {
+    this.page_tseg[mid] = this.d.store.metadata[mid].z;
+    file_src += '#t=' + this.page_tseg[mid][0].toFixed(3) + ',' + this.page_tseg[mid][1].toFixed(3);
+
   }
 
   var el;
@@ -439,8 +446,8 @@ _via_group_annotator.prototype._group_view_init_file_element = function(fid, vid
     el.setAttribute('muted', 'true');
     el.setAttribute('playsinline', 'true');
     el.setAttribute('src', file_src);
-    el.setAttribute('data-t0', this.page_tseg[fid][0].toFixed(3));
-    el.setAttribute('data-t1', this.page_tseg[fid][1].toFixed(3));
+    el.setAttribute('data-t0', this.page_tseg[mid][0].toFixed(3));
+    el.setAttribute('data-t1', this.page_tseg[mid][1].toFixed(3));
     /*
       el.addEventListener('mousemove', this._scrubber_on_mousemove.bind(this));
       el.addEventListener('mouseout', this._scrubber_on_mouseout.bind(this));
@@ -639,7 +646,8 @@ _via_group_annotator.prototype._group_metadata_on_change = function(e) {
       this.page_metadata_container[i].innerHTML = '';
       var vid = this.page_metadata_container[i].dataset.vid;
       var fid = this.page_metadata_container[i].dataset.fid;
-      this._group_view_init_file_metadata(this.page_metadata_container[i], vid, fid);
+      var mid = this.page_metadata_container[i].dataset.mid;
+      this._group_view_init_file_metadata(this.page_metadata_container[i], mid);
     }
   }.bind(this));
 }
@@ -680,8 +688,8 @@ _via_group_annotator.prototype._metadata_attribute_io_html_element = function(ai
     el = document.createElement('input');
     el.setAttribute('type', 'text');
     if(this.d.store.attribute[aid].aname === 'remarks') {
-      el.setAttribute('placeholder', 'enter true sign (if incorrect)');
-      el.setAttribute('title', 'Enter the keyword describing the true sign shown in this video');
+      el.setAttribute('placeholder', 'Enter correct sign');
+      el.setAttribute('title', 'Enter the keyword describing the sign shown in this video');
     }
     el.addEventListener('change', this._metadata_on_change.bind(this));
     el.setAttribute('value', aval);
@@ -712,6 +720,11 @@ _via_group_annotator.prototype._metadata_attribute_io_html_element = function(ai
       aval = dval;
     }
 
+    if(aid === '4') {
+      var alabel = document.createElement('span');
+      alabel.innerHTML = 'Finger Spelling&nbsp;';
+      el.appendChild(alabel);
+    }
     for ( var oid in this.d.store.attribute[aid].options ) {
       var radio = document.createElement('input');
       radio.setAttribute('type', 'radio');
@@ -804,19 +817,23 @@ _via_group_annotator.prototype._metadata_on_change = function(e) {
 
   this.d.metadata_update_av(mid, aid, aval).then( function(ok) {
     _via_util_msg_show('Updated metadata');
+    if(aid === '2') {
+      this._group_name_selector_update();
+    }
     for(var i in this.page_metadata_container) {
       var vid = this.page_metadata_container[i].dataset.vid;
       var fid = this.page_metadata_container[i].dataset.fid;
-      if(parseInt(vid) == ok.vid) {
+      var mid = this.page_metadata_container[i].dataset.mid;
+      if(parseInt(vid) == ok.vid && mid === ok.mid) {
         this.page_metadata_container[i].innerHTML = '';
-        this._group_view_init_file_metadata(this.page_metadata_container[i], vid, fid);
+        this._group_view_init_file_metadata(this.page_metadata_container[i], mid);
         break;
       }
     }
   }.bind(this));
 }
 
-_via_group_annotator.prototype._init_playback_speed_buttons = function(fid, c) {
+_via_group_annotator.prototype._init_playback_speed_buttons = function(fid, vid, mid, c) {
   c.innerHTML = '';
   var label = document.createElement('span');
   label.innerHTML = 'Play/Replay:&nbsp;';
@@ -829,8 +846,10 @@ _via_group_annotator.prototype._init_playback_speed_buttons = function(fid, c) {
     var el = document.createElement('span');
     el.setAttribute('class', 'text_button');
     el.setAttribute('data-fid', fid);
+    el.setAttribute('data-vid', vid);
+    el.setAttribute('data-mid', mid);
     el.setAttribute('title', 'Playback video at speed ' + speed + 'x');
-    el.setAttribute('onclick', 'via.ga.playback_video(' + fid + ',' + speed + ')');
+    el.setAttribute('onclick', 'via.ga.playback_video(this, ' + speed + ')');
     el.innerHTML = speed_list_html[speed_index] + 'x';
     c.appendChild(el);
     var space = document.createElement('span');
@@ -850,11 +869,9 @@ _via_group_annotator.prototype._init_playback_speed_buttons = function(fid, c) {
       var fidi = this.page_video_element_list[i].dataset.fid;
       if(fidi == fid) {
         var video = this.page_video_element_list[i];
-        console.log(video.width + 'x' + video.height);
-        console.log(video.videoWidth + 'x' + video.videoHeight);
         var winparam = "menubar=yes,location=yes,resizable=yes,scrollbars=yes,status=yes,width=" + video.videoWidth + ',height=' + video.videoHeight + ',centerscreen=yes,chrome=yes,toolbar=yes';
 
-        window.open(video.src, 'SignDB Video Preview', winparam );
+        window.open(video.src, 'Refresh page to reload video.', winparam );
         break;
       }
     }
@@ -862,14 +879,19 @@ _via_group_annotator.prototype._init_playback_speed_buttons = function(fid, c) {
   c.appendChild(extvideo);
 }
 
-_via_group_annotator.prototype.playback_video = function(fid, speed) {
+_via_group_annotator.prototype.playback_video = function(target, speed) {
+  var fid = target.dataset.fid;
+  var vid = target.dataset.vid;
+  var mid = target.dataset.mid;
   for ( var i in this.page_video_element_list ) {
     var fidi = this.page_video_element_list[i].dataset.fid;
-    if(fidi == fid) {
+    var vidi = this.page_video_element_list[i].dataset.vid;
+    var midi = this.page_video_element_list[i].dataset.mid;
+    if(fidi == fid && vidi === vid && midi === mid) {
       var video = this.page_video_element_list[i];
       //console.log('playing fid=' + fid + ' at speed=' + speed + ': src=' + video.src + ' : readyState=' + video.readyState);
       if(video.readyState >= 3) {
-        video.currentTime = this.page_tseg[fid][0] - this.page_tseg_context;
+        video.currentTime = this.page_tseg[mid][0] - this.page_tseg_context;
         video.playbackRate = speed;
         video.play();
       } else {

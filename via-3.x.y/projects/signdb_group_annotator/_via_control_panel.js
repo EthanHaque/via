@@ -15,6 +15,7 @@ function _via_control_panel(control_panel_container, via) {
   // registers on_event(), emit_event(), ... methods from
   // _via_event to let this module listen and emit events
   _via_event.call( this );
+  this.via.d.on_event('metadata_update', this._ID, this.on_event_metadata_update.bind(this));
 
   this._init();
 }
@@ -28,10 +29,11 @@ _via_control_panel.prototype._init = function(type) {
   this.c.appendChild(logo_panel);
 
   this.c.appendChild(this.via.gm.c);
-
+  this._add_spacer();
+  this._add_project_progress_bar();
   this._add_spacer();
 
-  //this._add_project_tools();
+  this._add_project_tools();
 
   this._add_spacer();
 
@@ -49,7 +51,7 @@ _via_control_panel.prototype._init = function(type) {
   help.addEventListener('click', function() {
     _via_util_page_show('page_about');
   }.bind(this));
-  //this.c.appendChild(help);
+  this.c.appendChild(help);
 }
 
 _via_control_panel.prototype._add_spacer = function() {
@@ -262,6 +264,32 @@ _via_control_panel.prototype._add_project_share_tools = function() {
   }
 }
 
+_via_control_panel.prototype._add_project_progress_bar = function() {
+  var progress_container = document.createElement('div');
+  this.project_progress = document.createElement('progress');
+  this.project_progress.setAttribute('value', '0');
+  this.project_progress.setAttribute('max', '0');
+  this.project_progress_label = document.createElement('span');
+
+  progress_container.appendChild(this.project_progress);
+  progress_container.appendChild(this.project_progress_label);
+  this.c.appendChild(progress_container);
+}
+
+_via_control_panel.prototype._update_project_progress_bar = function() {
+  var mid_count = 0;
+  var completed_mid_count = 0;
+  for(var mid in this.via.d.store.metadata) {
+    if(this.via.d.store.metadata[mid]['av'].hasOwnProperty('2')) {
+      completed_mid_count = completed_mid_count + 1;
+    }
+    mid_count = mid_count + 1;
+  }
+  this.project_progress.setAttribute('value', completed_mid_count);
+  this.project_progress.setAttribute('max', mid_count);
+  this.project_progress_label.innerHTML = '&nbsp;Completed ' + completed_mid_count + ' of ' + mid_count + '.';
+}
+
 _via_control_panel.prototype._share_show_info = function() {
   if ( this.via.d.project_is_remote() ) {
     this.via.s.exists(this.via.d.store.project.pid).then( function() {
@@ -403,4 +431,10 @@ _via_control_panel.prototype.fileuri_bulk_add_from_url_list = function(uri_list_
     }
     this.via.vm._file_add_from_filelist(filelist);
   }
+}
+
+_via_control_panel.prototype.on_event_metadata_update = function(data, event_payload) {
+  console.log(data)
+  console.log(event_payload);
+  this._update_project_progress_bar();
 }

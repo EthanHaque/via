@@ -20,7 +20,6 @@ function _via(via_container) {
   this.s  = new _via_share(this.d, conf);
 
   var action_map = { 'via_page_button_open_shared': this._page_on_action_open_shared.bind(this) };
-  console.log('TODO: activate start page')
   _via_util_page_show('page_share_open_shared', action_map);
 
   if ( typeof(_VIA_DEBUG) === 'undefined' || _VIA_DEBUG === true ) {
@@ -90,6 +89,23 @@ function _via(via_container) {
     // debug code (disabled for release)
     if ( typeof(_VIA_DEBUG) === 'undefined' || _VIA_DEBUG === true ) {
       /*
+      var pid = '';
+      this.s.pull(pid);
+      setTimeout( function() {
+        if( localStorage.getItem('pid') === this.d.store.project.pid ) {
+          if( typeof(localStorage.getItem('group_name')) !== 'undefined' ) {
+            var group_name = localStorage.getItem('group_name');
+            var page_no = parseInt(localStorage.getItem('page_no'))
+            this.ga.group_by('1', group_name, page_no);
+            _via_util_msg_show('Showing sign=' + group_name + ', page no. ' + (page_no+1) + ' (where you left in last session)');
+          }
+        } else {
+          this.ga.group_by('1');
+        }
+      }.bind(this), 500);
+      */
+      
+      /*
       this.d.project_load_json(_via_dp[0]['store']); // group annotation
       setTimeout( function() {
         if( localStorage.getItem('pid') === this.d.store.project.pid ) {
@@ -141,6 +157,7 @@ _via.prototype._page_on_action_open_shared = function(d) {
         } else {
           this.ga.group_by('1');
         }
+        this.cp._update_project_progress_bar();
       }.bind(this), 500);
     } else {
       _via_util_msg_show('You must enter a valid shared project-id');
