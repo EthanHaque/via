@@ -114,12 +114,13 @@ var VIA_CSV_SEP        = ',';
 var VIA_CSV_QUOTE_CHAR = '"';
 var VIA_CSV_KEYVAL_SEP = ':';
 
-var _via_img_metadata = {};   // data structure to store loaded images metadata
-var _via_img_src      = {};   // image content {abs. path, url, base64 data, etc}
-var _via_img_fileref  = {};   // reference to local images selected by using browser file selector
-var _via_img_count    = 0;    // count of the loaded images
-var _via_canvas_regions = []; // image regions spec. in canvas space
-var _via_canvas_scale   = 1.0;// current scale of canvas image
+var _via_img_metadata         = {}; // data structure to store loaded images metadata
+var _via_img_additional_info  = {}; // data structure to store additional information about images
+var _via_img_src              = {}; // image content {abs. path, url, base64 data, etc}
+var _via_img_fileref          = {}; // reference to local images selected by using browser file selector
+var _via_img_count            = 0;  // count of the loaded images
+var _via_canvas_regions       = []; // image regions spec. in canvas space
+var _via_canvas_scale         = 1.0;// current scale of canvas image
 
 var _via_image_id       = ''; // id={filename+length} of current image
 var _via_image_index    = -1; // index
@@ -320,6 +321,18 @@ function file_metadata(filename, size) {
   this.size     = size;         // file size in bytes
   this.regions  = [];           // array of file_region()
   this.file_attributes = {};    // image attributes
+}
+
+//
+// Data structure to store data about additional information that could
+// be useful when tagging images.
+//
+function file_additional_info(filename, size) { 
+  this.filename         = filename;
+  this.size             = size; // file size in bytes
+  this.best_label_guess = "";   // best label guess
+  this.possible_labels  = {};   // possible labels and scores
+  this.similar_images   = {};   // URI of similar images with scores
 }
 
 function file_region() {
