@@ -592,6 +592,11 @@ function sel_local_data_file(type) {
       invisible_file_input.onchange = project_import_attributes_from_file;
       break;
 
+    case 'additional_info':
+      invisible_file_input.accept = '.json';
+      invisible_file_input.onchange = load_additional_info_json;
+      break;
+
     default:
       console.log('sel_local_data_file() : unknown type ' + type);
       return;
