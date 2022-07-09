@@ -327,11 +327,14 @@ function file_metadata(filename, size) {
 // Data structure to store data about additional information that could
 // be useful when tagging images.
 //
-function file_additional_info(filename, size) { 
-  this.filename         = filename;
-  this.best_label_guess = "";   // best label guess
-  this.possible_labels  = {};   // possible labels and scores
-  this.similar_images   = {};   // URI of similar images with scores
+function file_additional_info(filename) { 
+  this.filename = filename;
+  this.best_label_guesses         = []; // best label guesses
+  this.possible_labels            = []; // possible labels and scores
+  this.full_matching_images       = []; // URL of fully matching images
+  this.partial_matching_images    = []; // URL of partially matching images
+  this.visually_similar_images    = []; // URL of similar looking images
+  this.pages_with_matching_images = []; // URL to pages with matching images.
 }
 
 function file_region() {
