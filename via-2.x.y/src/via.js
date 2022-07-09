@@ -1225,6 +1225,85 @@ function import_files_url_from_csv(data) {
   });
 }
 
+function parse_additional_info(json_data) {
+  var image_name = json_data["image_name"];
+  
+  var additional_info = new file_additional_info(image_name);
+  
+  // Array of Strings.
+  var best_label_guesses = json_data["response"]["bestGuessLabels"];
+  if (Array.isArray(best_label_guesses) && best_label_guesses.length > 0) { 
+    additional_info.best_label_guesses = Array.from(best_label_guesses, (x) => x["label"]);
+  }
+
+  // Array of Objects with two fields: label and score.
+  var possible_labels = json_data["response"]["webEntities"];
+  if (Array.isArray(possible_labels) && possible_labels.length > 0) { 
+    additional_info.possible_labels = Array.from(possible_labels, (x) =>
+    ({
+      label: x["description"],
+      score: x["score"],
+    }));
+  }
+
+  // Array of Strings.
+  var full_matching_images = json_data["response"]["fullMatchingImages"];
+  if (Array.isArray(full_matching_images) && full_matching_images.length > 0) {
+    additional_info.full_matching_images = Array.from(full_matching_images, (x) => x["url"]);
+  }
+
+  // Array of Objects with two fields: url and score.
+  var partially_matching_images = json_data["response"]["partialMatchingImages"];
+  if (Array.isArray(partially_matching_images) && partially_matching_images.length > 0) { 
+    additional_info.partially_matching_images = partially_matching_images
+  }
+
+  // Array of Objects with two fields: url and score.
+  var visually_similar_images = json_data["response"]["visuallySimilar_images"];
+  if (Array.isArray(visually_similar_images) && visually_similar_images.length > 0) {
+    additional_info.visually_similar_images = visually_similar_images;
+  }
+
+  // Array of Objects with several fields:
+  // fullMatchingImages: Array Objects with one field named url
+  // pageTitle: String
+  // partialMatchingImages: Array Objects with two fields named url and score
+  // score: Float
+  // url: String
+  var pages_with_matching_images = json_data["response"]["pagesWithMatchingImages"];
+  if (Array.isArray(pages_with_matching_images) && pages_with_matching_images.length > 0) { 
+    additional_info.pages_with_matching_images = pages_with_matching_images;
+  }
+  
+  return additional_info;
+}
+
+function load_additional_info_json(event) {
+  load_text_file(event.target.files[0], import_additional_info_from_json)
+}
+
+function import_additional_info_from_json(data_str) {
+  return new Promise(function (ok_callback, err_callback) {
+    if (data_str === '' || typeof (data_str) === 'undefined') {
+      err_callback();
+    }
+
+    var raw = JSON.parse(data_str);
+    var d = raw["data"];
+
+    var succesful_import_count = 0;
+
+    for (var i in d) {
+      var info = parse_additional_info(d[i])
+      _via_img_additional_info[info.filename] = info;
+
+      succesful_import_count++;
+    }
+
+    ok_callback([succesful_import_count])
+  });
+}
+
 //
 // Data Exporter
 //
