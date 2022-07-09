@@ -329,7 +329,6 @@ function file_metadata(filename, size) {
 //
 function file_additional_info(filename, size) { 
   this.filename         = filename;
-  this.size             = size; // file size in bytes
   this.best_label_guess = "";   // best label guess
   this.possible_labels  = {};   // possible labels and scores
   this.similar_images   = {};   // URI of similar images with scores
