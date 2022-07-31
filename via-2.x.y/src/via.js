@@ -1278,6 +1278,15 @@ function parse_additional_info(json_data) {
   return additional_info;
 }
 
+function open_additional_info_file() {
+  if (invisible_file_input) {
+    invisible_file_input.accept = '.json';
+    invisible_file_input.onchange = load_additional_info_json;
+    invisible_file_input.removeAttribute('multiple');
+    invisible_file_input.click();
+  }
+}
+
 function load_additional_info_json(event) {
   load_text_file(event.target.files[0], import_additional_info_from_json)
 }
@@ -1302,6 +1311,13 @@ function import_additional_info_from_json(data_str) {
 
     ok_callback([succesful_import_count])
   });
+}
+
+function update_additional_info(image_index) {
+  var image_id = _via_image_id_list[image_index];
+  var image_filename = _via_img_metadata[image_id].filename;
+  var image_additional_info = _via_img_additional_info[image_filename];
+   
 }
 
 //
