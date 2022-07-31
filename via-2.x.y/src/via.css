@@ -152,7 +152,7 @@ textarea {
   cursor: pointer;
 }
 
-/* Middle panel: containing #image_panel, #leftsidebar */
+/* Middle panel: containing #image_panel, #leftsidebar, #rightsidebar*/
 .middle_panel {
   display: table;
   table-layout: fixed;
@@ -167,12 +167,19 @@ textarea {
   vertical-align: top;
 }
 
+#rightsidebar {
+  display: none;
+  z-index: 10;
+  vertical-align: top;
+}
+
 #display_area {
   display: table-cell;
   width: 100%;
   z-index: 1;
   margin: 0;
   padding-left: 1em;
+  padding-right: 1em;
   vertical-align: top;
 }
 
@@ -331,6 +338,25 @@ textarea {
   cursor: pointer;
 }
 
+#rightsidebar_collapse_panel {
+  display: none;
+  position: relative;
+  z-index: 10;
+  vertical-align: top;
+  width: 1rem;
+  overflow: hidden;
+}
+
+#rightsidebar_show_button {
+  font-size: large;
+  margin-left: 0.1rem;
+}
+
+#rightsidebar_show_button:hover {
+  color: red;
+  cursor: pointer;
+}
+
 /* Left sidebar accordion */
 button.leftsidebar_accordion {
   font-size: large;
@@ -382,6 +408,49 @@ button.leftsidebar_accordion.active:after {
 .leftsidebar_accordion_panel td {
   border: 1px solid #f2f2f2;
   padding: 0.2rem 0.4rem;
+}
+
+/* right sidebar accordion */
+button.rightsidebar_accordion {
+  font-size: large;
+  background-color: #f2f2f2;
+  cursor: pointer;
+  padding: 0.5em 0.5em;
+  width: 100%;
+  text-align: right;
+  border: 0;
+  outline: none;
+}
+
+button.rightsidebar_accordion:focus {
+  outline: none;
+}
+
+button.rightsidebar_accordion.active,
+button.rightsidebar_accordion:hover {
+  background-color: #e6e6e6;
+}
+
+button.rightsidebar_accordion:after {
+  content: '\02795';
+  color: #4d4d4d;
+  float: left;
+}
+
+button.rightsidebar_accordion.active:after {
+  content: '\2796';
+}
+
+.rightsidebar_accordion_panel {
+  display: none;
+  padding: 0 0.5em;
+  font-size: small;
+  border-left: 2px solid #f2f2f2;
+  border-bottom: 2px solid #f2f2f2;
+}
+
+.rightsidebar_accordion_panel.show {
+  display: block;
 }
 
 /* buttons */
