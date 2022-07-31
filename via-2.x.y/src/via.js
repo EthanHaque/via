@@ -259,6 +259,7 @@ _via_settings.ui  = {};
 _via_settings.ui.annotation_editor_height   = 25; // in percent of the height of browser window
 _via_settings.ui.annotation_editor_fontsize = 0.8;// in rem
 _via_settings.ui.leftsidebar_width          = 18;  // in rem
+_via_settings.ui.rightsidebar_width         = 18;  // in rem
 
 _via_settings.ui.image_grid = {};
 _via_settings.ui.image_grid.img_height          = 80;  // in pixel
@@ -294,6 +295,7 @@ var img_fn_list_panel     = document.getElementById('img_fn_list_panel');
 var img_fn_list           = document.getElementById('img_fn_list');
 var attributes_panel      = document.getElementById('attributes_panel');
 var leftsidebar           = document.getElementById('leftsidebar');
+var rightsidebar          = document.getElementById('rightsidebar');
 
 var BBOX_LINE_WIDTH       = 4;
 var BBOX_SELECTED_OPACITY = 0.3;
@@ -306,6 +308,7 @@ var VIA_ANNOTATION_EDITOR_HEIGHT_CHANGE   = 5;   // in percent
 var VIA_ANNOTATION_EDITOR_FONTSIZE_CHANGE = 0.1; // in rem
 var VIA_IMAGE_GRID_IMG_HEIGHT_CHANGE      = 20;  // in percent
 var VIA_LEFTSIDEBAR_WIDTH_CHANGE          = 1;   // in rem
+var VIA_RIGHTSIDEBAR_WIDTH_CHANGE         = 1;   // in rem
 var VIA_POLYGON_SEGMENT_SUBTENDED_ANGLE   = 5;   // in degree (used to approximate shapes using polygon)
 var VIA_FLOAT_PRECISION = 3; // number of decimal places to include in float values
 
@@ -354,8 +357,9 @@ function _via_init() {
     document.getElementById('ui_top_panel').innerHTML += '<span>DEBUG MODE</span>';
   }
 
-  document.getElementById('img_fn_list').style.display = 'block';
-  document.getElementById('leftsidebar').style.display = 'table-cell';
+  document.getElementById('img_fn_list').style.display  = 'block';
+  document.getElementById('leftsidebar').style.display  = 'table-cell';
+  document.getElementById('rightsidebar').style.display = 'table-cell';
 
   // initialize default project
   project_init_default_project();
@@ -373,6 +377,7 @@ function _via_init() {
 
   show_single_image_view();
   init_leftsidebar_accordion();
+  init_rightsidebar_accordion();
   attribute_update_panel_set_active_button();
   annotation_editor_set_active_button();
   init_message_panel();
@@ -9314,8 +9319,8 @@ function _via_show_img_from_buffer(img_index) {
     // set the size of canvas
     // based on the current dimension of browser window
     var de = document.documentElement;
-    var image_panel_width = de.clientWidth - leftsidebar.clientWidth - 20;
-    if ( leftsidebar.style.display === 'none' ) {
+    var image_panel_width = de.clientWidth - leftsidebar.clientWidth - rightsidebar.clientWidth - 20;
+    if ( leftsidebar.style.display === 'none' && rightsidebar.style.display === 'none') {
       image_panel_width = de.clientWidth;
     }
     var image_panel_height = de.clientHeight - 2*ui_top_panel.offsetHeight;
