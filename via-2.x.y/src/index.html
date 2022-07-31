@@ -432,9 +432,9 @@
     <input type="file" id="invisible_file_input" name="files[]" style="display:none">
   </div> <!-- endof #top_panel -->
 
-  <!-- Middle Panel contains a left-sidebar and image display areas -->
+  <!-- Middle Panel contains a left-sidebar, image display areas, and right-sidebar -->
   <div class="middle_panel">
-    <!-- this panel contains a button to shows the left side bar -->
+    <!-- this panel contains a button to show the left side bar -->
     <div id="leftsidebar_collapse_panel">
       <span class="text_button" onclick="leftsidebar_toggle()" title="Show left sidebar">&rtrif;</span>
     </div>
@@ -1010,6 +1010,34 @@ POSSIBILITY OF SUCH DAMAGE.
           </pre>
       </div>
     </div> <!-- end of display_area -->
+
+    <!-- this panel contains a button to show the right side bar -->
+    <div id="rightsidebar_collapse_panel">
+      <span class="text_button" onclick="rightsidebar_toggle()" title="Show right sidebar">&ltrif;</span>
+    </div>
+
+    <div id="rightsidebar">
+      <div class="rightsidebar_accordion_panel show" style="float:left; border:2px solid #f2f2f2;">
+        <span class="text_button" onclick="rightsidebar_increase_width()"
+          title="Increase width of this toolbar panel">&larr;</span>
+        <span class="text_button" onclick="rightsidebar_decrease_width()"
+          title="Reduce width of this toolbar panel">&rarr;</span>
+        <span class="text_button" onclick="rightsidebar_toggle()" title="Show/hide this toolbar panel">&rtrif;</span>
+      </div>
+
+      <!-- Additional Info -->
+      <button class="rightsidebar_accordion active" id="additional_info_title">Additional Info</button>
+      <div class="rightsidebar_accordion_panel show">
+        <div class="button_panel show">
+          <span class="button" onclick="open_additional_info_file()" title="Add additional info file from local disk">Import</span>
+        </div>
+        <div class="row">
+          <span class="col"><label for="best_guess">Name: </label></span>
+          <span class="col"><div>Empty</div></span>
+        </div>
+      </div>
+
+    </div>
   </div> <!-- end of middle_panel -->
 
   <!-- this vertical spacer is needed to allow scrollbar to show
