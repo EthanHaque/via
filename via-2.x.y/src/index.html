@@ -1029,12 +1029,30 @@ POSSIBILITY OF SUCH DAMAGE.
       <button class="rightsidebar_accordion active" id="additional_info_title">Additional Info</button>
       <div class="rightsidebar_accordion_panel show">
         <div class="button_panel show">
-          <span class="button" onclick="open_additional_info_file()" title="Add additional info file from local disk">Import</span>
+          <span class="button" onclick="open_additional_info_file()" title="Add additional info file from local disk to workspace">Add Info File</span>
         </div>
-        <div class="row">
-          <span class="col"><label for="best_guess">Name: </label></span>
-          <span class="col"><div>Empty</div></span>
-        </div>
+        <table class="best_guess_table">
+          <tr>
+            <td>
+              <span><label for="best_guess">Guess: </label></span>
+            </td>
+            <td>
+              <span id="best_label">Empty</span>
+            </td>
+          </tr>
+        </table>
+        <span id="possible_labels_parent">
+          <label for="possible_labels">Other Possible Labels</label>
+        </span>
+        <table class="possible_labels_table" id="possible_labels"></table>
+        <span id="similar_images_parent">
+          <label for="similar_images">Similar Images</label>
+        </span>
+        <table class="similar_images_table" id="similar_images"></table>
+        <span id="similar_webpages_parent">
+          <label for="similar_webpages">Webpages with Similar Images</label>
+        </span>
+        <table class="similar_webpages_table" id="similar_webpages"></table>
       </div>
 
     </div>

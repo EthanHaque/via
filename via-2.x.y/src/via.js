@@ -1313,16 +1313,148 @@ function import_additional_info_from_json(data_str) {
 
       succesful_import_count++;
     }
-
     ok_callback([succesful_import_count])
   });
 }
 
 function update_additional_info(image_index) {
+  if (image_index < 0 || image_index >= _via_image_id_list.length) return;
+
   var image_id = _via_image_id_list[image_index];
   var image_filename = _via_img_metadata[image_id].filename;
+  
+  if (!(image_filename in _via_img_additional_info)) {
+    clear_additional_info();
+    return;
+  }
+
   var image_additional_info = _via_img_additional_info[image_filename];
-   
+
+  set_best_label_guess(image_additional_info.best_label_guesses[0]);
+  set_possible_labels(image_additional_info.possible_labels);
+
+  var image_urls = gather_image_urls(image_additional_info);
+  set_simliar_images(image_urls);
+
+  var webpage_urls = gather_webpage_urls(image_additional_info);
+  set_similar_webpages(webpage_urls);
+}
+
+function set_similar_webpages(webpage_urls) {
+  var similar_images = document.getElementById("similar_webpages");
+  similar_images.innerHTML = "";
+  for (var i in webpage_urls) { 
+    var url = webpage_urls[i];
+    var a = document.createElement('a');
+    var row = document.createElement("tr");
+    var div = document.createElement("div");
+    var cell = document.createElement("td");
+    div.classList.add("clamp_text");
+    a.href = url;
+    a.target = "_blank";
+    a.textContent = url;
+    div.appendChild(a);
+    cell.appendChild(div);
+    row.appendChild(cell);
+    similar_images.appendChild(row);
+  }
+}
+
+function gather_webpage_urls(image_additional_info) {
+  var urls = [];
+  for (var i in image_additional_info.pages_with_matching_images) {
+    urls.push(image_additional_info.pages_with_matching_images[i]["url"]);
+  }
+  return urls
+}
+
+function gather_image_urls(image_additional_info) {
+  var urls = []
+  for (var i in image_additional_info.full_matching_images) { 
+    urls.push(image_additional_info.full_matching_images[i]["url"]);
+  }
+  for (var i in image_additional_info.partially_matching_images) {
+    urls.push(image_additional_info.partially_matching_images[i]["url"]);
+  }
+  for (var i in image_additional_info.visually_similar_images) {
+    urls.push(image_additional_info.visually_similar_images[i]["url"]);
+  }
+  return urls;
+}
+
+function set_simliar_images(urls) { 
+  var similar_images = document.getElementById("similar_images");
+  similar_images.innerHTML = "";
+  var row = document.createElement("tr");
+  for (var i in urls) {
+    var col_width = 2;
+    var url = urls[i];
+    if (i % col_width == 0 && i > 0) {
+      similar_images.appendChild(row);
+      row = document.createElement("tr");
+    }
+    var cell = document.createElement("td");
+    var a = document.createElement("a");
+    var img = document.createElement("img");
+    img.src = url;
+    img.width = 100;
+    img.height = 100;
+    a.href = url;
+    a.target = "_blank";
+    a.appendChild(img);
+    cell.appendChild(a);
+    row.appendChild(cell);
+  }
+}
+
+function set_possible_labels(possible_labels) { 
+  var possible_labels_table = document.getElementById("possible_labels");
+  possible_labels_table.innerHTML = "";
+  possible_labels_table.scrollTop = 0;
+  possible_labels.filter(
+    i => !(!i["label"] || i["label"].length === 0)).forEach((possible_label) => {
+    var label = possible_label["label"];
+    var score = possible_label["score"];
+    var color = percentageToColor(score);
+    
+    var row = document.createElement("tr");
+    var label_cell = document.createElement("td");
+    var score_cell = document.createElement("td");
+    label_cell.textContent = label;
+    row.style.background = color;
+    score_cell.textContent = score.toFixed(3);
+    score_cell.classList.add("score_cell");
+
+    row.appendChild(label_cell);
+    row.appendChild(score_cell);
+    possible_labels_table.appendChild(row);
+  });
+}
+
+function set_best_label_guess(best_label_guess) {
+  if (!best_label_guess || best_label_guess.length === 0) {
+    best_label_guess = "No best guess found";
+  }
+  document.getElementById("best_label").textContent = best_label_guess;
+}
+
+function clear_additional_info() {
+  //@todo: implement
+  document.getElementById("best_label").textContent = "Empty";
+  document.getElementById("possible_labels").innerHTML = "";
+  document.getElementById("similar_images").innerHTML = "";
+  document.getElementById("similar_webpages").innerHTML = "";
+}
+
+function percentageToColor(percentage, maxHue = 120, minHue = 0) {
+  const scale_factor = 1.2;
+  percentage *= scale_factor;
+
+  if (percentage > 1) percentage = 1;
+  if (percentage < 0) percentage = 0;
+  
+  const hue = percentage * (maxHue - minHue) + minHue;
+  return `hsl(${hue}, 100%, 75%)`;
 }
 
 //
@@ -1826,7 +1958,6 @@ function jump_to_image(image_index) {
     }
     break;
   }
-  update_additional_info(image_index);
 }
 
 function count_missing_region_attr(img_id) {
@@ -9269,6 +9400,7 @@ function _via_cancel_current_image_loading() {
 }
 
 function _via_show_img(img_index) {
+  update_additional_info(img_index);
   if ( _via_is_loading_current_image ) {
     return;
   }
